@@ -2,10 +2,12 @@
 
 ################################################################################
 # Simple script to generate printable font proof sheets
+# To Do: add font coverage printig
+# https://github.com/abelcheung/font-coverage
 
 use strict;
 use warnings;
-use Data::Dumper;
+# use Data::Dump qw( dump );
 use PDF::API2;
 
 use constant mm => 25.4 / 72;
@@ -13,26 +15,42 @@ use constant in => 1 / 72;
 use constant pt => 1;
 
 use POSIX qw( strftime );
-
 my $date = strftime("%Y-%m-%d %H:%M:%S", localtime(time));
 my $dt = $date;
 $dt =~ s/\D//g;
-my ( $font_path, $txt) = @ARGV;
-my ( $paragraph1, $paragraph2, $picture ) = get_data();
+
+my ( $font_path, $txt ) = @ARGV;
+
+if (not defined $font_path) {
+  print "'$0' needs some TTF file.\n";
+  exit;
+}
+
+my $abc = [ 0..9 , "A".."Z" , "a".."z" ];
+my $pangram1 = "The quick brown fox jumps over the lazy dog.",
+my $pangram2 = "El veloz murciélago hindú comía feliz cardillo y kiwi. La cigüeña tocaba el saxofón detrás del palenque de paja. (Éste es usado para mostrar los estilos de letra en el sistema operativo.";
+my $lorem = "Enim eugiamc ommodolor sendre feum zzrit at. Ut prat. Ut lum quisi.";
+my $large_lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus venenatis venenatis nisi, in lobortis velit auctor sed. Donec non sagittis ante. Nunc quis leo eu nisi cursus volutpat non vel libero. Pellentesque vel erat nibh. Praesent id orci tincidunt, consequat odio eget, cursus est. Vestibulum imperdiet gravida dolor, condimentum semper nunc lacinia varius. Nunc ac convallis augue.";
+my $str = join(" ", @{$abc});
 
 my $pdf = PDF::API2->new(
-# -file => "$font_path-PROOFSHEET_$dt.pdf",
-  -file => "$font_path-PROOFSHEET.pdf",
-# -fullscreen => 1,
-  -fitwindow => 1,
+#   -file => $font_path."-PROOFSHEET.pdf",
+    -file => "$font_path-PROOFSHEET_$dt.pdf",
 );
 
 my $page = $pdf->page;
 $page->mediabox( 105 / mm, 148 / mm );
-#$page->bleedbox(  5/mm,   5/mm,  100/mm,  143/mm);
+# $page->bleedbox(  5/mm,   5/mm,  100/mm,  143/mm);
 $page->cropbox( 7.5 / mm, 7.5 / mm, 97.5 / mm, 140.5 / mm );
-#$page->artbox  ( 10/mm,  10/mm,   95/mm,  138/mm);
+# $page->artbox  ( 10/mm,  10/mm,   95/mm,  138/mm);
 
+$pdf->preferences(
+  -fitwindow => 1,
+  -firstpage => [
+    $page,
+    -fit => 1,
+  ]
+);
 
 my $font = $pdf->ttfont($font_path);
 my $font_name = $font->{'BaseFont'}{'val'};
@@ -48,6 +66,8 @@ $gray_line->move( 5 / mm, 125 / mm );
 $gray_line->line( 100 / mm, 125 / mm );
 $gray_line->stroke;
 
+
+
 my $headline_text = $page->text;
 $headline_text->font( $font, 18 / pt );
 $headline_text->fillcolor('white');
@@ -60,95 +80,173 @@ $subheadline_text->fillcolor('darkgrey');
 $subheadline_text->translate( 10 / mm, 127 / mm );
 $subheadline_text->text($date);
 
-my $background = $page->text;
-$background->fillcolor('#E2E2E2');
-$background->font( $font, 178 / pt );
-$background->translate(20 / mm, 31 / mm );
-$background->rotate(45);
-$background->text($font_name);
+# my $background = $page->text;
+# $background->fillcolor('#E2E2E2');
+# $background->font( $font, 180 / pt );
+# $background->translate(20 / mm, 31 / mm );
+# $background->rotate(45);
+# $background->text($font_name);
 
-
-my $left_column_text = $page->text;
-$left_column_text->font( $font, 14 / pt );
-$left_column_text->fillcolor('black');
+my $lead = $page->text;
+$lead ->font( $font, 20 / pt );
+$lead ->fillcolor('black');
 my ( $endw, $ypos, $paragraph ) = text_block(
-    $left_column_text,
-    $paragraph1,
+    $lead ,
+    $str,
     -x        => 10 / mm,
-    -y        => 119 / mm,
+    -y        => 116 / mm,
     -w        => 85 / mm,
     -h        => 120 / mm - 7 / pt,
-    -lead     => 14 / pt,
+    -lead     => 22 / pt,
     -parspace => 0 / pt,
-    -align    => 'justify',
+    -align    => 'left',
 );
 
-$left_column_text->font( $font, 6 / pt );
-$left_column_text->fillcolor('darkblue');
+my $gray_line2 = $page->gfx;
+$gray_line2->strokecolor('gray');
+$gray_line2->move( 10 / mm, 82 / mm );
+$gray_line2->line( 95 / mm, 82 / mm );
+$gray_line2->stroke;
+
+# Left Column
+my $left_column_text = $page->text;
+$left_column_text->font( $font, 16 / pt );
+$left_column_text->fillcolor('#2F2F2F');
 ( $endw, $ypos, $paragraph ) = text_block(
     $left_column_text,
-    'Enim eugiamc ommodolor sendre feum zzrit at. Ut prat. Ut lum quisi.',
+    $lorem,
     -x => 10 / mm,
-    -y => $ypos - 7 / pt,
-    -w => 41.5 / mm,
+    -y => $ypos - 4 / pt,
+    -w => 55 / mm,
     -h => 110 / mm - ( 119 / mm - $ypos ),
-    -lead     => 7 / pt,
+    -lead     => 14 / pt,
+    -parspace => 0 / pt,
+    -align    => 'left',
+);
+
+$left_column_text->font( $font, 12 / pt );
+$left_column_text->fillcolor('black');
+( $endw, $ypos, $paragraph ) = text_block(
+    $left_column_text,
+    $pangram1,
+    -x => 10 / mm,
+    -y => $ypos - 6 / pt,
+    -w =>55 / mm,
+    -h => 110 / mm - ( 119 / mm - $ypos ),
+    -lead     => 12 / pt,
     -parspace => 0 / pt,
     -align    => 'center',
 );
 
-$left_column_text->font( $font, 6 / pt );
+$left_column_text->font( $font, 10 / pt );
 $left_column_text->fillcolor('black');
 ( $endw, $ypos, $paragraph ) = text_block(
     $left_column_text,
-    $paragraph2,
+    $lorem,
     -x => 10 / mm,
-    -y => $ypos,
-    -w => 41.5 / mm,
+    -y => $ypos - 6 / pt,
+    -w => 55 / mm,
     -h => 110 / mm - ( 119 / mm - $ypos ),
-    -lead     => 7 / pt,
+    -lead     => 12 / pt,
     -parspace => 0 / pt,
-    -align    => 'justify',
+    -align    => 'left',
 );
 
-# my $photo = $page->gfx;
-# die("Unable to find image file: $!") unless -e $picture;
-# my $photo_file = $pdf->image_jpeg($picture);
-# $photo->image( $photo_file, 54 / mm, 66 / mm, 41 / mm, 55 / mm );
+$left_column_text->font( $font, 8 / pt );
+$left_column_text->fillcolor('black');
+( $endw, $ypos, $paragraph ) = text_block(
+    $left_column_text,
+    $large_lorem,
+    -x => 10 / mm,
+    -y => $ypos - 4 / pt,
+    -w => 55 / mm,
+    -h => 110 / mm - ( 119 / mm - $ypos ),
+    -lead     => 9 / pt,
+    -parspace => 0 / pt,
+    -align    => 'left',
+);
 
+# Right Column
 my $right_column_text = $page->text;
 $right_column_text->font( $font, 6 / pt );
 $right_column_text->fillcolor('black');
 ( $endw, $ypos, $paragraph ) = text_block(
     $right_column_text,
-    $paragraph,
-    -x        => 54 / mm,
-    -y        => 62 / mm,
-    -w        => 41.5 / mm,
+    $large_lorem,
+    -x        => 68 / mm,
+    -y        => 78 / mm,
+    -w        => 27 / mm,
     -h        => 54 / mm,
     -lead     => 7 / pt,
     -parspace => 0 / pt,
     -align    => 'justify',
-    -hang     => "\xB7  ",
+);
+
+$right_column_text = $page->text;
+$right_column_text->font( $font, 4 / pt );
+$right_column_text->fillcolor('black');
+( $endw, $ypos, $paragraph ) = text_block(
+    $right_column_text,
+    $large_lorem,
+    -x        => 68 / mm,
+    -y        => $ypos - 2 / pt,
+    -w        => 27 / mm,
+    -h        => 54 / mm,
+    -lead     => 5 / pt,
+    -parspace => 0 / pt,
+    -align    => 'right',
+);
+$right_column_text = $page->text;
+$right_column_text->font( $font, 3 / pt );
+$right_column_text->fillcolor('black');
+( $endw, $ypos, $paragraph ) = text_block(
+    $right_column_text,
+    $large_lorem,
+    -x        => 68 / mm,
+    -y        => $ypos - 2 / pt,
+    -w        => 27 / mm,
+    -h        => 54 / mm,
+    -lead     => 4 / pt,
+    -parspace => 0 / pt,
+    -align    => 'justify',
+);
+$right_column_text = $page->text;
+$right_column_text->font( $font, 2 / pt );
+$right_column_text->fillcolor('black');
+( $endw, $ypos, $paragraph ) = text_block(
+    $right_column_text,
+    $large_lorem,
+    -x        => 68 / mm,
+    -y        => $ypos - 2 / pt,
+    -w        => 27 / mm,
+    -h        => 54 / mm,
+    -lead     => 3 / pt,
+    -parspace => 0 / pt,
+    -align    => 'left',
 );
 
 $pdf->save;
 $pdf->end();
 
+# Auto lines brakes function
+# http://rick.measham.id.au/pdf-api2/
 sub text_block {
 
     my $text_object = shift;
     my $text        = shift;
 
     my %arg = @_;
+    #print $text;
 
     # Get the text in paragraphs
     my @paragraphs = split( /\n/, $text );
-
     # calculate width of all words
     my $space_width = $text_object->advancewidth(' ');
 
     my @words = split( /\s+/, $text );
+    # cambio espacio por nonchar
+    #my @words = split( /^\w/, $text );
+
     my %width = ();
     foreach (@words) {
         next if exists $width{$_};
@@ -156,7 +254,7 @@ sub text_block {
     }
 
     $ypos = $arg{'-y'};
-    my @paragraph = split( / /, shift(@paragraphs) );
+    my @paragraph = split( /\s+/, shift(@paragraphs) );
 
     my $first_line      = 1;
     my $first_paragraph = 1;
@@ -168,7 +266,7 @@ sub text_block {
         unless (@paragraph) {
             last unless scalar @paragraphs;
 
-            @paragraph = split( / /, shift(@paragraphs) );
+            @paragraph = split( /\s+/, shift(@paragraphs) );
 
             $ypos -= $arg{'-parspace'} if $arg{'-parspace'};
             last unless $ypos >= $arg{'-y'} - $arg{'-h'};
@@ -284,16 +382,6 @@ sub text_block {
 
 }
 
-sub get_data {
-    (
-qq|Dolobore ex erit, vel in utating etum ad dolutatet la feugiatue mod euisci blandre tat iurem eum velit prat nosting essim ver aliscil dolortie cor alisit wisl delesti sciduisci ting eu feu facidunt autat. Duipis amcommy non er sit, commy numsand ionsequam.|,
-
-qq|Perci ent ulluptat vel eum zzriure feuguero core consenis adignim irilluptat praessit la con henit velis dio ex enim ex ex euguercilit il enismol eseniam, suscing essequis nit iliquip erci blam dolutpatisi.
-Orpero do odipit ercilis ad er augait ing ex elit autatio od minisis amconsequam, quis am il do consenim esequi eui blamcorer adiat. Ut prat la facip ercip eugiamconsed tio do exero ea consequis do odolor il dolut wisim adit, susciniscing et adit num num vel ip ercilit alismolorem zzril ute dolendre ming eu feui bla feugait il illa facin eu feugiam conseniam eliquisl et luptat la feu feugait, volore euguerc incillu msandigna feuipisl iriuscilit velit wisl utem veros ad min velit laor iuscilit veliquis ad tie endignim dignisl et, qui bla feugue mod enibh esendiam, si blaor si blaore te min vel utpat nonsequ issequis dolorperosto dolobore ex erit, vel in utating etum ad dolutatet la feugiatue mod euisci blandre tat iurem eum velit prat nosting essim ver aliscil dolortie cor alisit wisl delesti sciduisci ting eu feu facidunt autat. Duipis amcommy non er sit, commy numsand ionsequam, commy num alisim euis dio eu faciduisit ate moloreet, quam zzrillaore magnit eum dolor ipsum dunt dolor sequatie dolor iustrud te molum dolore velit la faccum zzriuscil utpat irit nummod magna alis eu faccum inibh erosto ea ad magniamet vel esto dipsusto elesting eugiam, commolobore deliquat praessenim et, vel ut et nibh et adit lortisi.|,
-
-        './Portrait.jpg'
-    );
-}
 
 # my %font = (
 #     Helvetica => {
