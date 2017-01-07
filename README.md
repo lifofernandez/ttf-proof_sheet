@@ -6,7 +6,7 @@ Simple Perl script to generate printable PDF proof sheets for a ttf/otf font.
 $ sudo cpan i PDF::API2
 ```
 
-Maybe you need to update CPAN 
+Maybe you need to update CPAN
 ```
 $ sudo cpan i CPAN
 ```
@@ -16,5 +16,5 @@ Just in case you run into same problem installing modules on OSX
 
 ## Usage
 ```
-$ perl ttf-proof_sheet.pl path/to/file.otf
+$ perl ttf-proof_sheet.pl path/to/file.otf path/to/file.pdf
 ```
