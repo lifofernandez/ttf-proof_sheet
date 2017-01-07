@@ -19,23 +19,26 @@ my $date = strftime("%Y-%m-%d %H:%M:%S", localtime(time));
 my $dt = $date;
 $dt =~ s/\D//g;
 
-my ( $font_path, $txt ) = @ARGV;
+my ( $font_path, $pdf_output_path ) = @ARGV;
 
 if (not defined $font_path) {
   print "'$0' needs some TTF file.\n";
   exit;
 }
+if (not defined $pdf_output_path) {
+  print "You should indicate a PDF output path.\n";
+  exit;
+}
 
-my $abc = [ 0..9 , "A".."Z" , "a".."z" ];
+my $basic_alphabet = [ "0".."9", "A".."Z", "a".."z" ];
 my $pangram1 = "The quick brown fox jumps over the lazy dog.",
 my $pangram2 = "El veloz murciélago hindú comía feliz cardillo y kiwi. La cigüeña tocaba el saxofón detrás del palenque de paja. (Éste es usado para mostrar los estilos de letra en el sistema operativo.";
 my $lorem = "Enim eugiamc ommodolor sendre feum zzrit at. Ut prat. Ut lum quisi.";
 my $large_lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus venenatis venenatis nisi, in lobortis velit auctor sed. Donec non sagittis ante. Nunc quis leo eu nisi cursus volutpat non vel libero. Pellentesque vel erat nibh. Praesent id orci tincidunt, consequat odio eget, cursus est. Vestibulum imperdiet gravida dolor, condimentum semper nunc lacinia varius. Nunc ac convallis augue.";
-my $str = join(" ", @{$abc});
+my $abc = join(" ", @{$basic_alphabet});
 
 my $pdf = PDF::API2->new(
-#   -file => $font_path."-PROOFSHEET.pdf",
-    -file => "$font_path-PROOFSHEET_$dt.pdf",
+    -file => $pdf_output_path,
 );
 
 my $page = $pdf->page;
@@ -53,7 +56,9 @@ $pdf->preferences(
 );
 
 my $font = $pdf->ttfont($font_path);
+# To do: look for better formed name property in font objet
 my $font_name = $font->{'BaseFont'}{'val'};
+$font_name =~ s/  +/ /g;
 
 my $black_box = $page->gfx;
 $black_box->fillcolor('black');
@@ -92,7 +97,7 @@ $lead ->font( $font, 20 / pt );
 $lead ->fillcolor('black');
 my ( $endw, $ypos, $paragraph ) = text_block(
     $lead ,
-    $str,
+    $abc,
     -x        => 10 / mm,
     -y        => 116 / mm,
     -w        => 85 / mm,
