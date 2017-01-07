@@ -11,10 +11,10 @@ Maybe you need to update CPAN
 $ sudo cpan i CPAN
 ```
 
-And just in case you run into same problem installing modules on OSX
-[CPAN FIX: not permissions on '/usr/bin'](https://gist.github.com/lifofernandez/5f3378af6500c8e4ea0ab94885030962)
+Just in case you run into same problem installing modules on OSX
+[CPAN fix: not permissions on '/usr/bin'](https://gist.github.com/lifofernandez/5f3378af6500c8e4ea0ab94885030962)
 
-# Usage
+## Usage
 ```
-$ perl ttf-proof_sheet.pl ./path/to/file.otf
+$ perl ttf-proof_sheet.pl path/to/file.otf
 ```
